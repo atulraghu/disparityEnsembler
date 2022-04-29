@@ -10,11 +10,9 @@ WORKDIR /Ensembler
 COPY data_scene_flow.zip /Ensembler/data_scene_flow.zip
 RUN unzip /Ensembler/data_scene_flow.zip
 RUN pip install scikit-image
-COPY disparity.py /Ensembler/test.py
-COPY stackhourglass.py /Ensembler/models/stackhourglass.py
-COPY submodule.py /Ensembler/models/submodule.py
+COPY disparity.py /Ensembler/disparity.py
 COPY KITTILoader.py /Ensembler/dataloader/KITTILoader.py
-COPY rundisparity.sh /Ensembler/runtest.sh
+COPY KITTIloader2015.py /Ensembler/dataloader/KITTIloader2015.py
+COPY rundisparity.sh /Ensembler/rundisparity.sh
 RUN chmod +x rundisparity.sh
-RUN chmod +x runtest.sh
-#CMD ./rundisparity.sh
+CMD ./rundisparity.sh

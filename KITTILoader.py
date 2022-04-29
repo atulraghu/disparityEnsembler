@@ -22,6 +22,14 @@ def default_loader(path):
 def disparity_loader(path):
     return Image.open(path)
 
+def to_shape(x, target_shape):
+    padding_list = []
+    for x_dim, target_dim in zip(x.shape, target_shape):
+        pad_value = max((target_dim - x_dim),0)
+        pad_tuple = ((pad_value//2, pad_value//2 + pad_value%2))
+        padding_list.append(pad_tuple)
+
+    return torch.tensor(np.pad(x, tuple(padding_list), mode='constant'))
 
 class myImageFloder(data.Dataset):
     def __init__(self, left, right, left_disparity, training, loader=default_loader, dploader= disparity_loader):
@@ -38,25 +46,23 @@ class myImageFloder(data.Dataset):
         crf_img_path = self.right[index]
         disp_L= self.disp_L[index]
 
-        cnn_img = self.loader(cnn_img_path)
-        crf_img = self.loader(crf_img_path)
+        cnn_img = self.dploader(cnn_img_path)
+        crf_img = self.dploader(crf_img_path)
         dataL = self.dploader(disp_L)
-
 
         wCNN, hCNN = cnn_img.size
         wCRF, hCRF = crf_img.size
-        print("CNN Size: ", wCNN, hCNN)
-        print("CRF Size: ", wCRF, hCRF)
-        #left_img = left_img.crop((w-1232, h-368, w, h))
-        #right_img = right_img.crop((w-1232, h-368, w, h))
+        w,h = dataL.size
 
-        dataL = dataL.crop((w-1232, h-368, w, h))
+        #cnn_img = cnn_img.crop((wCNN-1226, hCNN-368, wCNN, hCNN))
+        #crf_img = crf_img.crop((wCRF-1226, hCRF-368, wCRF, hCRF))
+        cnn_img = np.ascontiguousarray(cnn_img,dtype=np.float32)/256
+        crf_img = np.ascontiguousarray(crf_img,dtype=np.float32)/256
         dataL = np.ascontiguousarray(dataL,dtype=np.float32)/256
 
-        processed = preprocess.get_transform(augment=False)
-        cnn_img       = processed(cnn_img)
-        crf_img      = processed(crf_img)
-
+        cnn_img = to_shape(cnn_img,(375,1242) )
+        crf_img = to_shape(crf_img,(375,1242) )
+        dataL = to_shape(dataL,(375,1242) )
 
         return cnn_img_path, crf_img_path, disp_L, cnn_img, crf_img, dataL
 
